@@ -19,6 +19,11 @@ const textColors = {
     'Keeper of the Flame': 'text-slugGreen',
 };
 
+const excludedAddresses = [
+    'BnZNCQz3Zqb1o4nrjW3zNGbWdKubSTw7mAU5NGYouJMF',
+    'GXgLxgoJ9oNRCHRQZwaY1v5dXqcpys3K2LqNuRtGM6oo',
+];
+
 export function BurnLeaderboard(props: BurnLeaderboardProps) {
     const {
         burnStats,
@@ -35,7 +40,7 @@ export function BurnLeaderboard(props: BurnLeaderboardProps) {
         setRows([...burnStats.users].map((u) => {
             (u as any).expanded = false;
             return u;
-        }));
+        }).filter((u) => !excludedAddresses.includes(u.address)));
     }, [burnStats]);
 
     const handleExpand = React.useCallback((address: string) => {
