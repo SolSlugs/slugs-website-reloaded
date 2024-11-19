@@ -24,6 +24,11 @@ import { RPC_URL } from './Constants';
 import { sleep } from './Utilities';
 import { APIData, UnburntSlug, BurntSlug, Trait } from './Types';
 
+const excludedAddresses = [
+    'BnZNCQz3Zqb1o4nrjW3zNGbWdKubSTw7mAU5NGYouJMF',
+    'GXgLxgoJ9oNRCHRQZwaY1v5dXqcpys3K2LqNuRtGM6oo',
+];
+
 function App() {
     const [data, setData] = React.useState<APIData | undefined>();
 
@@ -115,6 +120,22 @@ function App() {
         fetchData();
     }, [fetchData]);
 
+    const biggestBurner = React.useMemo(() => {
+        if (!data) {
+            return undefined;
+        }
+
+        for (const user of data.burnStats.users) {
+            if (excludedAddresses.includes(user.address)) {
+                continue;
+            }
+
+            return user.address;
+        }
+    }, [
+        data,
+    ]);
+
     return (
         <Router>
             <ConnectionProvider endpoint={endpoint}>
@@ -125,7 +146,7 @@ function App() {
                                 <Header
                                     slugCount={data?.slugStats?.slugCount}
                                     burnCount={data?.burnStats?.slugsBurnt}
-                                    biggestBurner={data?.burnStats?.biggestBurner?.address}
+                                    biggestBurner={biggestBurner}
                                 />
 
                                 <Routes
