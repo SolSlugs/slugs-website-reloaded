@@ -3,6 +3,7 @@ import { Switch } from '@headlessui/react';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { Transaction, SystemProgram } from '@solana/web3.js';
 import { encode } from "@stablelib/base64";
+import { toast } from 'react-toastify';
 
 import { DiscordUser, VerifiedAddress } from '../Types';
 
@@ -86,27 +87,33 @@ export function PerformVerify(props: PerformVerifyProps) {
             return;
         }
 
-        const transaction = new Transaction().add(
-            SystemProgram.transfer({
-                fromPubkey: publicKey,
-                toPubkey: publicKey,
-                lamports: 0,
-            })
-        );
+        try {
+            const transaction = new Transaction().add(
+                SystemProgram.transfer({
+                    fromPubkey: publicKey,
+                    toPubkey: publicKey,
+                    lamports: 0,
+                })
+            );
 
-        transaction.feePayer = publicKey;
-        transaction.recentBlockhash = (await connection.getRecentBlockhash('finalized')).blockhash;
+            const recentBlockHash = (await connection.getLatestBlockhash('confirmed')).blockhash;
 
-        const signedTransaction = await signTransaction(transaction);
+            transaction.feePayer = publicKey;
+            transaction.recentBlockhash = recentBlockHash;
 
-        const address = publicKey.toString();
+            const signedTransaction = await signTransaction(transaction);
 
-        sendVerifyRequest(address, {
-            address,
-            primary: address === primaryAddress,
-            transaction: encode(signedTransaction.serialize()),
-            discordToken: accessToken,
-        });
+            const address = publicKey.toString();
+
+            sendVerifyRequest(address, {
+                address,
+                primary: address === primaryAddress,
+                transaction: encode(signedTransaction.serialize()),
+                discordToken: accessToken,
+            });
+        } catch (err) {
+            toast.error('Error creating/sending transaction: ' + (err as any).toString());
+        }
     }
 
     async function handleSignVerifyMessage() {
